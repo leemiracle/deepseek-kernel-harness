@@ -65,7 +65,14 @@ def authorize(tool_name, args):
         p = str(args.get('path', ''))
         if not p:
             return False, 'write_file 需要 path'
-        rp = Path(p).resolve()
+        rp = Path(p)
+        # e2e 实证教训（ds1620.c）：相对路径必须锚定 KERNEL_SRC——exec_tool 的 resolve()
+        # 会写入 KERNEL_SRC/相对路径，但本检查若锚 CWD 会误 DENY 真实白名单内的写入
+        if not rp.is_absolute():
+            ks = _kernel_src()
+            if ks:
+                rp = ks / rp
+        rp = rp.resolve()
         if not any(str(rp).startswith(r) for r in _writable_roots()):
             return False, f'DENIED: 写白名单外路径 {rp}（允许: KERNEL_SRC + state/）'
     return True, 'ok'
@@ -84,6 +91,14 @@ def _self_test():
         ('nuclear_launch', {'cmd': 'x'}, False),                        # 未注册工具
     ]
     ok = True
+    # e2e 回归（ds1620.c）：KERNEL_SRC 设定时相对路径写入 = 写 KERNEL_SRC 下，必须 ALLOW
+    import os
+    os.environ['KERNEL_SRC'] = str(PLUGIN_ROOT)          # 用插件根模拟内核树
+    got, why = authorize('write_file', {'path': 'drivers/char/ds1620.c'})
+    mark = '✓' if got else '✗'
+    ok = ok and got
+    print(f'  [{mark}] write_file 相对路径锚定 KERNEL_SRC -> {"ALLOW" if got else "DENY " + why[:50]}')
+    del os.environ['KERNEL_SRC']
     for tool, args, want in cases:
         got, why = authorize(tool, args)
         mark = '✓' if got == want else '✗'

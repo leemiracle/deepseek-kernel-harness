@@ -90,3 +90,18 @@
 - 实证(智谱 coding 端点)：T4 探针第二次调用 hit=128 miss=29；真实循环 turn1 miss=3236 → turn2 hit=3200 miss=199（98.8% 命中）——前缀缓存自动生效，hit≈1/10 计价。
 - 新增 cache_usage() 跨家字段兼容 + run() 逐轮 [usage] 遥测 + 结束落账 + 探针 T4。
 - 核实：官方 deepseek-ai/deepseek-harness(dsh) 8-13 真实开源(453K行 TS/Cordis)——我方先前疑为幻觉，已纠正；README 加关系澄清，ROADMAP.md 记外部评审吸收(P0-P4 已做/缺口对照+修订路线)。
+
+## 2026-08-18 16:12:01
+[cache] hit=90496 miss=13795 rate=87%（前缀稳定=省钱，DeepSeek 计费 hit≈1/10）
+
+## 2026-08-18 16:12:01
+[done] ## 汇报：ds1620.c checkpatch --strict 修复（S-k-e2e）
+
+**已修复（6/7）**：
+- ERROR `switch(cmd)` → `switch (cmd)`（#248）
+- ERROR trailing whitespace（#313，两处 tab-only 尾空白）
+- filename-in-file 注释（#3）→ 移除路径前缀
+- `static
+
+## 2026-08-18 16:18:30
+[self-test] 账本写入验证

@@ -74,13 +74,15 @@ def guard(diff_text, task_type='add'):
         # G4: 纯 whitespace（每行 strip 后无内容差异）
         if all(a.strip() == '' for a in added) and all(r.strip() == '' for r in removed) and n_add + n_rem > 0:
             findings.append({'rule': 'G4', 'file': fname, 'detail': '纯 whitespace 变化'})
-        # G1: 净删除率（任务非 del/cleanup 时，删 40%+ 需要说明）
+        # G1: 净删除率（e2e 实证教训 ds1620.c：改写行对 ±1 会被虚报"52%删除"——
+        #     正确语义是净删除：net_del = max(0, rem-add)，改写对不算删除）
         total = n_add + n_rem
         if total >= 10 and task_type not in ('del', 'cleanup', 'refactor'):
-            del_ratio = n_rem / total
+            net_del = max(0, n_rem - n_add)
+            del_ratio = net_del / total
             if del_ratio > 0.4:
                 findings.append({'rule': 'G1', 'file': fname,
-                                 'detail': f'删除占比 {del_ratio:.0%} —— 疑似删代码消警告；确属删除任务请 --task-type del'})
+                                 'detail': f'净删除占比 {del_ratio:.0%}（-{n_rem}/+{n_add}）—— 疑似删代码消警告；确属删除任务请 --task-type del'})
         # G2: 新增行注释占比
         code_add = [a for a in added if a.strip()]
         if len(code_add) >= 8:
@@ -98,7 +100,16 @@ def guard(diff_text, task_type='add'):
 
 
 def self_test():
-    """三种 gaming 样本必 REJECT，一个正常修复必 PASS。"""
+    """gaming 样本必 REJECT，正常修复必 PASS。"""
+    # 改写对回归（e2e 教训 ds1620.c：10+/11- 是改写不是删除，必须 PASS）
+    rewrite_pair = """+++ b/drivers/char/ds1620.c
+@@
+-    printk(KERN_ERR "netwinder HW");
++    pr_err("netwinder HW");
+-    printk(KERN_INFO "split"
+-            "string");
++    pr_info("split string");
+""" + '\n'.join(f'-    old_line_{i}();' for i in range(7)) + '\n' + '\n'.join(f'+    new_line_{i}();' for i in range(7))
     cases = [
         ('正常修复', 'add', """+++ b/drivers/char/foo.c
 @@
@@ -136,6 +147,7 @@ def self_test():
 +    int z = 0;
 +    return z;
 """, 'REJECT'),
+        ('改写对 10+/11- 不误报(净删除语义)', 'add', rewrite_pair, 'PASS'),
         ('G3 #if 0', 'add', """+++ b/drivers/char/foo.c
 @@
 +#if 0
