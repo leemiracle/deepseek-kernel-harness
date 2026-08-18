@@ -137,8 +137,15 @@ python3 governance/goodhart_guards.py --base HEAD~1
 
 ## 🧭 与官方 DeepSeek Harness (dsh) 的关系
 
-官方 [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness)（2026-08-13 开源）是 TypeScript/Cordis 插件 runtime。**本仓库是独立发展的 Python CLI 级领域插件**（六组件教学骨架），非 Cordis 包格式，不能被 dsh 直接 mount——但 `tools/` 金字塔与 `governance/` 三查的长期路线是包装成 dsh-plugin 进官方生态（详见 [ROADMAP.md](ROADMAP.md)）。
+官方 [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness)（2026-08-13 开源）是 TypeScript/Cordis 插件 runtime。**本仓库 v0.2.0 起是双形态**：
+
+| 形态 | 入口 | 场景 |
+|---|---|---|
+| **Cordis bundle** ★ | `cordis/index.js`（package.json `dsh.bundle`）| 融入 dsh 生态：`dsh plugin --profile <p> add github:leemiracle/deepseek-kernel-harness` |
+| Python CLI 插件 | `deepseek_host.py` + `engine_probe.py` | 无 dsh 环境：CI/cron/裸机，或 opencode/cline 四针脚接线（[INTEGRATION.md](INTEGRATION.md)）|
+
+Cordis 映射（六组件 → dsh seams）：AGENTS.md→`ctx.systemPrompt.section(order:110)`；金字塔+三查→`ctx.tools.register(defineTool)`×8；账本保持文件 JSONL；宿主循环/方言/权限由 dsh 自身承担。**纯 JS 零构建**——git 安装免 allowBuilds（官方 publish 文档 prepare 陷阱免疫）。已实证（2026-08-18，keyless）：官方 Cordis loader + tgz 安装 → `graph_guard` 穿真实工具管线 REJECT gaming diff（G2）+ 契约段进 prompt 装配。
 
 ---
 
-**版本**：v0.1（2026-08-18）· 核心隐喻：**loop 层工具是修车的扳手，graph 层治理是车检线——扳手再好，也发现不了两辆车在抢同一条车道。**
+**版本**：v0.2.0（2026-08-18）· 核心隐喻：**loop 层工具是修车的扳手，graph 层治理是车检线——扳手再好，也发现不了两辆车在抢同一条车道。**

@@ -1,0 +1,8 @@
+# cordis.patch.yml — dsh bundle 层：profile 列出本包时应用（docs/user/develop/basic/publish.md 格式）
+- insert:
+    - id: deepseek-kernel-harness
+      name: deepseek-kernel-harness
+      # config 可被上层 patch 整行覆盖（later layers win per row）：
+      # config:
+      #   kernelSrc: /path/to/linux
+      #   taskType: add

@@ -105,3 +105,14 @@
 
 ## 2026-08-18 16:18:30
 [self-test] 账本写入验证
+
+## 2026-08-18 16:30:52
+[self-test] 账本写入验证
+
+## 2026-08-18 · Cordis 包格式改造（v0.2.0）★融入官方 dsh 生态
+
+- 新增 cordis/（index.js + cordis.patch.yml）+ 根 package.json（dsh.bundle 声明，纯 JS 零构建=git安装免allowBuilds）。
+- API 一手核实：defineTool/ctx.tools.register(tutorial 07)/ctx.systemPrompt.section order带110(core/system-prompt README)/Schema配置(tutorial 05)。坑：schemastery无.enum()链→描述化取值。
+- keyless e2e 全通：npm pack tgz 安装→Cordis loader 最小合成→graph_guard 穿真实工具管线 REJECT gaming diff(G2 12/13)+契约段进 prompt 装配(RC=0)。
+- profile 层合成验证：dsh plugin add→bundles 注册→--dump-config 见 # == deepseek-kernel-harness 层+overlay config.kernelSrc 注入。
+- 教训：①dsh CLI --profile 无 app bundle 时常驻静默(非bug,rc期行为)→keyless验证走 Cordis loader 直跑 ②link: 安装下依赖从仓库真实路径解析→仓库内需 npm install ③overlay 行按 id 整行替换 config。

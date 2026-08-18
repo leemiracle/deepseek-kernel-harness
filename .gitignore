@@ -4,3 +4,7 @@ __pycache__/
 .kout/
 *.o
 *.cmd
+
+node_modules/
+*.tgz
+.pnpm-store/
