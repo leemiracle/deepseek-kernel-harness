@@ -131,6 +131,10 @@ python3 governance/goodhart_guards.py --base HEAD~1
 - [ ] L4 virtme 冒烟接 kunit 选择器（按改动 subsystem 选 selftest 集）
 - [ ] 进化闭环（手册 11 章）：把 patch_ledger 的 REJECT 原因回流为 guard 规则增量
 
+## 📄 License
+
+[MIT](LICENSE) © 2026 leemiracle
+
 ---
 
 **版本**：v0.1（2026-08-18）· 核心隐喻：**loop 层工具是修车的扳手，graph 层治理是车检线——扳手再好，也发现不了两辆车在抢同一条车道。**
