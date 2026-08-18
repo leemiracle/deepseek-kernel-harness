@@ -1,11 +1,10 @@
 {
   "name": "deepseek-kernel-harness",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Linux kernel dev domain plugin for DeepSeek Harness (dsh): verification pyramid L1-L4 as model-facing tools + graph-layer governance (anti-Goodhart / blind-spot / patch-conflict) + AGENTS.md contract as a system-prompt section. Plain JS, no build step.",
   "type": "module",
   "main": "cordis/index.js",
   "files": [
-    "cordis/",
     "tools/",
     "governance/",
     "engines/",
@@ -18,7 +17,11 @@
     "README.md",
     "INTEGRATION.md",
     "ROADMAP.md",
-    "LICENSE"
+    "LICENSE",
+    "cordis/index.js",
+    "cordis/cordis.patch.yml",
+    "cordis/test/drive.mjs",
+    "cordis/test/run.sh"
   ],
   "dsh": {
     "bundle": {
