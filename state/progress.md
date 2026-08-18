@@ -116,3 +116,8 @@
 - keyless e2e 全通：npm pack tgz 安装→Cordis loader 最小合成→graph_guard 穿真实工具管线 REJECT gaming diff(G2 12/13)+契约段进 prompt 装配(RC=0)。
 - profile 层合成验证：dsh plugin add→bundles 注册→--dump-config 见 # == deepseek-kernel-harness 层+overlay config.kernelSrc 注入。
 - 教训：①dsh CLI --profile 无 app bundle 时常驻静默(非bug,rc期行为)→keyless验证走 Cordis loader 直跑 ②link: 安装下依赖从仓库真实路径解析→仓库内需 npm install ③overlay 行按 id 整行替换 config。
+
+## 2026-08-18 · 密钥读取隔离补强（手册 02 章 Scope 单项）
+
+- cordis/index.js runCLI 从 {...process.env} 改 SAFE_ENV_KEYS 白名单（PATH/HOME/locale + KERNEL_SRC/KOUT + 代理）——API key/凭据类不进子进程。
+- 复验：node --check + import OK（v0.2.0 增量，不破 tgz 路径）。

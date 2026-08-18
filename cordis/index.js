@@ -38,11 +38,19 @@ export const Config = Schema.object({
   timeoutMs: Schema.number().default(300000).description('单个工具超时（ms）'),
 })
 
-// ---------- 工具执行内核：spawn CLI + 结果预算（手册 04 章：保尾部，错误栈在最后） ----------
+// ---------- 工具执行内核：spawn CLI + env 白名单（密钥隔离）+ 结果预算 ----------
+// 密钥读取隔离（手册 02 章 Scope 检查单项）：只透传白名单 env——API key/凭据类
+// 不进子进程；文件面的隔离由 dsh fs-sandbox 治理（本插件工具不读密钥文件）。
 const RESULT_CAP = 16_000
+const SAFE_ENV_KEYS = [
+  'PATH', 'HOME', 'LANG', 'LC_ALL', 'TERM', 'TMPDIR', 'USER',
+  'KERNEL_SRC', 'KOUT',
+  'HTTP_PROXY', 'HTTPS_PROXY', 'NO_PROXY',                // 代理非密钥，git/make 需要
+]
 
 function runCLI(cmd, args, config) {
-  const env = { ...process.env }
+  const env = Object.fromEntries(
+    SAFE_ENV_KEYS.filter((k) => process.env[k] !== undefined).map((k) => [k, process.env[k]]))
   if (config.kernelSrc) env.KERNEL_SRC = config.kernelSrc
   if (config.kout) env.KOUT = config.kout
   return new Promise((resolve) => {
