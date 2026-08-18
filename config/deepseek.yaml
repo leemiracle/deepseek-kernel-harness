@@ -1,0 +1,36 @@
+# deepseek.yaml — 端点/路由/预算配置（手册 04/08/09 章参数落点）
+# 本文件是插件声明性配置；host 优先读环境变量，其次读本文件。
+
+engine:
+  provider: deepseek
+  base_url: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+  api_key_env: DEEPSEEK_API_KEY
+
+router:                        # 手册 08 章 Router/Cascade
+  loop_model: deepseek-chat          # 工具循环：快、函数调用稳定
+  thinker_model: deepseek-reasoner   # deep_plan 工具：规划/审查（重活下沉）
+  fallback: [deepseek-chat]          # reasoner 不可用时不中断循环
+
+dialect:                       # 手册 09 章模型方言（DeepSeek 形态）
+  reasoner:
+    no_thinking_param: true          # deepseek-reasoner 不接受 thinking 类参数（用默认深度思考）
+    strip_reasoning_on_feed: true    # reasoning_content 不回灌多轮上下文（Preserved Thinking 方言）
+    usage_fields: [reasoning_tokens]
+
+context:                       # 手册 04 章趋同参数（抄默认值后须回归验证）
+  window: 128000
+  compact_trigger: 0.8
+  keep_recent_chars: 20000
+  tool_result_cap: 16000
+  file_max_lines: 2000
+
+budgets:
+  max_turns: 40
+  verify_timeout_s: 300
+  build_lock_wait_s: 900
+
+governance:                    # graph 层三查（顺序即门禁顺序）
+  - goodhart_guards.py         # 查补丁本体
+  - global_conflicts.py        # 查影响面
+  - patch_queue.py precheck    # 查基线
+  gate: 三查全 PASS 才允许 patch_queue claim → 入队

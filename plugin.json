@@ -1,0 +1,43 @@
+{
+  "id": "kernel-dev",
+  "name": "Linux Kernel Development Plugin",
+  "version": "0.1.0",
+  "description": "Linux kernel 领域插件：验证金字塔 L1-L4 + graph 层三病治理（Goodhart/向上盲区/冲突）。插入任何 OpenAI 兼容六组件宿主（参照 harness工程手册 12 章骨架）。",
+  "engine": {
+    "protocol": "openai-compatible（唯一协议；方言注册表覆盖差异）",
+    "registry": "engines/dialects.py",
+    "probe": "engine_probe.py",
+    "env": {
+      "KH_BASE_URL": "端点（兼容旧名 DEEPSEEK_BASE_URL）",
+      "KH_API_KEY": "密钥（兼容旧名 DEEPSEEK_API_KEY）",
+      "KH_LOOP_MODEL": "工具循环模型（覆盖注册表默认）",
+      "KH_THINKER_MODEL": "规划/审查模型",
+      "KH_ENGINE": "显式指定引擎名（否则按 base_url 自动识别）"
+    },
+    "engines": ["zhipu✅", "deepseek", "dashscope", "moonshot", "openai", "anthropic", "gemini", "local(vllm/ollama)"],
+    "router": {
+      "policy": "cascade：工具循环用 loop 模型（快、函数调用稳定）；plan/review 走 thinker（harness工程手册 08 章）",
+      "dialect_note": "reasoning_content 全引擎统一不回灌（手册 09 章 Preserved Thinking 的协议无关实现）；bigmodel loop 自动 thinking:disabled"
+    }
+  },
+  "instructions": "AGENTS.md",
+  "mount_points": {
+    "E": { "bootstrap": "AGENTS.md 注入 system；state/progress.md 尾部 200 行注入首条 user 消息（断点续传）" },
+    "T": { "tools_dir": "tools/", "extra_tools": ["k_check", "k_static", "k_build", "k_boot", "k_maintainer", "graph_guard", "graph_conflict", "patch_queue_status"] },
+    "C": { "tool_result_cap": 16000, "compact_trigger": 0.8, "keep_recent": 20000 },
+    "S": { "ledger": "state/patch_ledger.jsonl", "progress": "state/progress.md", "append_only": true },
+    "L": { "authorize_hook": "hooks/authorize.py", "fail_closed": true },
+    "V": { "pyramid": ["L1 checkpatch", "L2 sparse+coccinelle", "L3 make W=1", "L4 virtme/qemu boot"], "gate": "governance 三查不过，补丁禁入队列" }
+  },
+  "governance": {
+    "goodhart": "governance/goodhart_guards.py",
+    "blindspot": "governance/global_conflicts.py",
+    "conflict": "governance/patch_queue.py",
+    "rationale": "手册 02 章 #65-66：三种结构病必须上移 graph 层"
+  },
+  "env": {
+    "KERNEL_SRC": "内核树路径；未设则自动探测 ./linux、../linux、/lib/modules/$(uname -r)/build",
+    "KOUT": "构建输出目录（默认 KERNEL_SRC 下 objtree；建议外置防污染源码树）"
+  },
+  "self_test": "python3 deepseek_host.py --self-test"
+}

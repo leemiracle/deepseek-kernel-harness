@@ -1,0 +1,6 @@
+# .gitignore — deepseek-kernel-harness
+__pycache__/
+*.pyc
+.kout/
+*.o
+*.cmd

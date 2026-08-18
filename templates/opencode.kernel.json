@@ -1,0 +1,40 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "deepseek/deepseek-chat",
+  "instructions": ["<PLUGIN_ROOT>/AGENTS.md"],
+  "provider": {
+    "deepseek": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "DeepSeek",
+      "options": {
+        "baseURL": "https://api.deepseek.com"
+      },
+      "models": {
+        "deepseek-chat": { "name": "DeepSeek Chat (loop)" },
+        "deepseek-reasoner": { "name": "DeepSeek Reasoner (plan/review)" }
+      }
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "bash": {
+      "*": "ask",
+      "python3 governance/*": "allow",
+      "python3 <PLUGIN_ROOT>/governance/*": "allow",
+      "bash <PLUGIN_ROOT>/tools/k_*.sh*": "allow",
+      "make O=* M=* W=1*": "allow",
+      "make * defconfig": "allow",
+      "make mrproper*": "deny",
+      "make distclean*": "deny",
+      "git push --force*": "deny",
+      "git reset --hard*": "deny",
+      "rm *-rf*": "deny",
+      "rm -rf*": "deny",
+      "curl* | *sh*": "deny",
+      "wget* | *sh*": "deny"
+    },
+    "external_directory": {
+      "<PLUGIN_ROOT>/**": "allow"
+    }
+  }
+}

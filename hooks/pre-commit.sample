@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# pre-commit.sample — graph 层治理的 VCS 硬门禁（INTEGRATION.md §5）
+# 为什么存在：外部 agent（opencode/cline）不会自动加载 hooks/authorize.py，
+# 治理从"宿主强制"降级为"契约+近似"。git commit 是无论哪个 agent 都绕不过的咽喉，
+# 把 goodhart_guards 挂在这里 = 治理回到强制态（手册 02 章：上移到不可绕过的层）。
+#
+# 安装（在内核树里）:
+#   KERNEL_HARNESS_ROOT=/path/to/deepseek-kernel-harness \
+#     cp $KERNEL_HARNESS_ROOT/hooks/pre-commit.sample .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+set -u
+
+# 定位插件根：环境变量优先，其次常见相对位置探测（不硬编码绝对路径）
+PLUGIN_ROOT="${KERNEL_HARNESS_ROOT:-}"
+if [ -z "$PLUGIN_ROOT" ]; then
+  for c in "$PWD/deepseek-kernel-harness" "$PWD/../deepseek-kernel-harness" \
+           "$HOME/deepseek-kernel-harness"; do
+    [ -d "$c/governance" ] && PLUGIN_ROOT="$c" && break
+  done
+fi
+if [ -z "$PLUGIN_ROOT" ] || [ ! -f "$PLUGIN_ROOT/governance/goodhart_guards.py" ]; then
+  echo "[pre-commit] 找不到插件（export KERNEL_HARNESS_ROOT=/path/to/deepseek-kernel-harness）"
+  echo "[pre-commit] fail-closed：没有治理器 = 拒绝提交（手册 03 章：无规则=拒绝）"
+  exit 1
+fi
+
+TMP="$(mktemp /tmp/kh_precommit.XXXXXX)"
+trap 'rm -f "$TMP"' EXIT
+git diff --cached > "$TMP"
+[ -s "$TMP" ] || exit 0   # 空 diff 放行（ amend / 空提交 ）
+
+python3 "$PLUGIN_ROOT/governance/goodhart_guards.py" --diff "$TMP" --json
+rc=$?
+if [ $rc -eq 1 ]; then
+  echo ""
+  echo "[pre-commit] commit 被拒：Goodhart 证据见上（删代码/注释代码消警告 = graph 层拦截）"
+  echo "  正当删除任务：人工复核后 git commit --no-verify（留痕绕过，责任在人）"
+fi
+exit $rc
