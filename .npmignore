@@ -1,0 +1,6 @@
+# 测试运行产物不进包
+cordis/test/result.json
+# Python 侧缓存
+__pycache__/
+*.pyc
+state/patch_ledger.jsonl

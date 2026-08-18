@@ -1,0 +1,6 @@
+{
+  "stage": "done",
+  "tool_pipeline": "REJECT-seen",
+  "contract_section": true,
+  "guard_head": "exit=1\n{\n  \"guard\": \"goodhart\",\n  \"verdict\": \"REJECT\",\n  \"findings\": [\n    {\n      \"rule\": \"G2\",\n      \"file\": \"demo.c\",\n      \"detail\": \"新增行注释占比 12/13 —— 疑似注释掉报警代码\"\n    }\n  ]\n}\n"
+}

@@ -121,3 +121,10 @@
 
 - cordis/index.js runCLI 从 {...process.env} 改 SAFE_ENV_KEYS 白名单（PATH/HOME/locale + KERNEL_SRC/KOUT + 代理）——API key/凭据类不进子进程。
 - 复验：node --check + import OK（v0.2.0 增量，不破 tgz 路径）。
+
+## 2026-08-18 · cordis/test/ 回归固化（dsh rc 期 breaking 一键回归）
+
+- run.sh 全自包含：mktemp 沙盒 + 内置 gaming 样本（kernel=12行注释报警 G2 / rust=删#[test] G1+G8）+ 断言 RC。
+- 依赖闭包踩坑：cordis@4.0.1 bin.js import 未声明依赖（cordis-plugin-loader→include→group→hmr→timer 链）——沙盒需显式装全 5 个（官方 rc 打包 bug，dsh CLI 全家桶自带所以此前没暴露）。
+- 双仓实测 RC=0：graph_guard 穿管线 REJECT + 契约段进装配。npm pack 验证 cordis/test 已入包（.npmignore 排 result.json）。
+- npm 占名就绪：两包名空闲（Not found），npmrc 仅代理无 token——待用户 npm login 后一键发。
