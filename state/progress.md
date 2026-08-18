@@ -75,3 +75,18 @@
 
 ## 2026-08-18 13:49:06
 [self-test] 账本写入验证
+
+## 2026-08-18 15:41:47
+[self-test] 账本写入验证
+
+## 2026-08-18 15:42:46
+[cache] hit=3200 miss=3435 rate=48%（前缀稳定=省钱，DeepSeek 计费 hit≈1/10）
+
+## 2026-08-18 15:42:46
+[done] `demo_probe` 采用单出口 `goto` 错误处理链：`demo_hw_init` 失败时跳转 `err_clk_disable` 执行 `clk_disable_unprepare(clk)` 清理已使能的时钟后返回错误码；`clk` 本身由 `devm_clk_get` 获取（设备移除时自动释放），无需手动 `clk_put`。
+
+## 2026-08-18 · cache 遥测 + 外部评审吸收
+
+- 实证(智谱 coding 端点)：T4 探针第二次调用 hit=128 miss=29；真实循环 turn1 miss=3236 → turn2 hit=3200 miss=199（98.8% 命中）——前缀缓存自动生效，hit≈1/10 计价。
+- 新增 cache_usage() 跨家字段兼容 + run() 逐轮 [usage] 遥测 + 结束落账 + 探针 T4。
+- 核实：官方 deepseek-ai/deepseek-harness(dsh) 8-13 真实开源(453K行 TS/Cordis)——我方先前疑为幻觉，已纠正；README 加关系澄清，ROADMAP.md 记外部评审吸收(P0-P4 已做/缺口对照+修订路线)。

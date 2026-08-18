@@ -135,6 +135,10 @@ python3 governance/goodhart_guards.py --base HEAD~1
 
 [MIT](LICENSE) © 2026 leemiracle
 
+## 🧭 与官方 DeepSeek Harness (dsh) 的关系
+
+官方 [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness)（2026-08-13 开源）是 TypeScript/Cordis 插件 runtime。**本仓库是独立发展的 Python CLI 级领域插件**（六组件教学骨架），非 Cordis 包格式，不能被 dsh 直接 mount——但 `tools/` 金字塔与 `governance/` 三查的长期路线是包装成 dsh-plugin 进官方生态（详见 [ROADMAP.md](ROADMAP.md)）。
+
 ---
 
 **版本**：v0.1（2026-08-18）· 核心隐喻：**loop 层工具是修车的扳手，graph 层治理是车检线——扳手再好，也发现不了两辆车在抢同一条车道。**

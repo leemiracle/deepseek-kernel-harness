@@ -207,6 +207,28 @@ def maybe_compact(messages, ledger):
     return compacted + tail
 
 
+def cache_usage(u):
+    """跨家读取 cache 计量字段；返回 (hit, miss) 或 None（端点不透出）。
+    DeepSeek: usage.prompt_cache_hit_tokens / prompt_cache_miss_tokens
+    OpenAI 系: usage.prompt_tokens_details.cached_tokens
+    智谱等兼容层：实测见 engine_probe T4——不透出则返回 None，遥测静默降级"""
+    if u is None:
+        return None
+    hit = getattr(u, "prompt_cache_hit_tokens", None)
+    if hit is not None:
+        return hit, getattr(u, "prompt_cache_miss_tokens", None)
+    d = getattr(u, "prompt_tokens_details", None)
+    if d is not None and getattr(d, "cached_tokens", None) is not None:
+        return d.cached_tokens, (u.prompt_tokens or 0) - d.cached_tokens
+    if isinstance(u, dict):
+        if u.get("prompt_cache_hit_tokens") is not None:
+            return u["prompt_cache_hit_tokens"], u.get("prompt_cache_miss_tokens")
+        d = u.get("prompt_tokens_details") or {}
+        if d.get("cached_tokens") is not None:
+            return d["cached_tokens"], u.get("prompt_tokens", 0) - d["cached_tokens"]
+    return None
+
+
 # ===== E 组件：主循环（三终止条件）=====
 def run(task, max_turns=MAX_TURNS_DEFAULT):
     from openai import OpenAI
@@ -216,14 +238,27 @@ def run(task, max_turns=MAX_TURNS_DEFAULT):
     ledger = Ledger()
     agents_md = (ROOT / "AGENTS.md").read_text() if (ROOT / "AGENTS.md").exists() else "You are a kernel dev agent."
     progress_tail = ledger.progress.read_text()[-2000:]
+    # 布局（cache 友好）：system(静态 AGENTS.md) 恒在最前 → 稳定前缀可被磁盘缓存命中；
+    # 动态内容（progress 尾部/task/工具结果）只追加在尾部。注意：maybe_compact 触发会
+    # 重写历史 → 前缀缓存失效——这是压缩的固有代价，换取窗口空间（手册 04 章 trade-off）。
     messages = [{"role": "system", "content": agents_md},
                 {"role": "user", "content": f"[断点续传·progress 尾部]\n{progress_tail}\n\n[TASK]\n{task}"}]
+    cache_hit = cache_miss = 0
     for turn in range(max_turns):                              # 终止1：轮数上限
         messages = maybe_compact(messages, ledger)
         r = client.chat.completions.create(model=loop_model(), messages=messages,
                                            tools=TOOLS, **dialect["loop_kwargs"])
+        c = cache_usage(getattr(r, "usage", None))
+        if c:
+            cache_hit += c[0] or 0
+            cache_miss += c[1] or 0
+            print(f"[usage] turn={turn + 1} cache hit={c[0]} miss={c[1]}")
         msg = r.choices[0].message
         if not msg.tool_calls:
+            if cache_hit or cache_miss:
+                tot = cache_hit + cache_miss
+                ledger.wrap_up(f"[cache] hit={cache_hit} miss={cache_miss} "
+                               f"rate={cache_hit / tot:.0%}（前缀稳定=省钱，DeepSeek 计费 hit≈1/10）")
             ledger.wrap_up(f"[done] {msg.content[:200]}")     # 终止2：自然结束
             return msg.content
         messages.append({"role": "assistant", "content": msg.content or "",
@@ -237,6 +272,9 @@ def run(task, max_turns=MAX_TURNS_DEFAULT):
             print(f"[audit] {tc.function.name} -> {'ALLOW' if ok else 'DENY ' + why}")
             result = exec_tool(tc.function.name, args) if ok else f"DENIED: {why}"
             messages.append({"role": "tool", "tool_call_id": tc.id, "content": result})
+    if cache_hit or cache_miss:
+        tot = cache_hit + cache_miss
+        ledger.wrap_up(f"[cache] hit={cache_hit} miss={cache_miss} rate={cache_hit / tot:.0%}")
     ledger.wrap_up(f"[timeout] {max_turns} turns reached —— 交接：按 progress.md 续跑")
     return "TIMEOUT（已交接）"                                  # 终止3：超时可交接
 

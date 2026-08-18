@@ -94,8 +94,27 @@ def main():
     except Exception as e:
         record("T3 thinker", False, f"降级可用（cascade 会兜回 loop 模型）：{str(e)[:80]}")
 
-    n_fail = sum(1 for _, ok, _ in results[:2] if not ok)   # T3 不计入
-    print(f"probe: {'ALL PASS' if n_fail == 0 else 'FAILED'}（T1/T2 为硬门，T3 可降级）")
+    # T4 cache（同前缀连打两次，看第二次命中；信息项——端点不透出字段则报 N/A）
+    try:
+        from deepseek_host import cache_usage
+        static_sys = "你是 Linux 内核补丁工程师。风格即协议：错误路径用 goto 单出口 unwind。" \
+                     "不改无关行。验证金字塔 L1-L4 逐层升。" * 4   # ~200 token 稳定前缀
+        cache_msgs = [{"role": "system", "content": static_sys},
+                      {"role": "user", "content": "只回复：OK"}]
+        call(client, loop_model(), cache_msgs, **d["loop_kwargs"])           # 第一次（预热缓存）
+        _, usage2 = call(client, loop_model(), cache_msgs, **d["loop_kwargs"])  # 第二次（应命中）
+        c = cache_usage(usage2)
+        if c:
+            record("T4 cache 字段", True, f"第二次调用 hit={c[0]} miss={c[1]} "
+                   f"(hit≈1/10 计费——命中即省钱)")
+        else:
+            record("T4 cache 字段", True, "端点不透出 cache 字段（N/A）——"
+                   "布局仍按静态前缀排，DeepSeek 官方端点可计量")
+    except Exception as e:
+        record("T4 cache 字段", True, f"探针异常（信息项）：{str(e)[:60]}")
+
+    n_fail = sum(1 for _, ok, _ in results[:2] if not ok)   # T1/T2 硬门；T3/T4 信息项
+    print(f"probe: {'ALL PASS' if n_fail == 0 else 'FAILED'}（T1/T2 为硬门，T3/T4 信息项）")
     return 0 if n_fail == 0 else 1
 
 
