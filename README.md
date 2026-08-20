@@ -31,6 +31,10 @@ deepseek-kernel-harness/
 │   └── deepseek.yaml       ← 端点/路由/预算（模型方言见手册 09 章）
 ├── templates/
 │   └── opencode.kernel.json ← opencode 接线模板（provider+instructions+permission）
+├── knowledge/              ★ 2026-08-20 扩充：功能审计线（发现已实现功能的问题）
+│   ├── linux_docs_map.md        ← Linux 文档地图：功能域→文档语义→x-kernel crate 查询表
+│   ├── xkernel_feature_audit.md ← P1-P12 问题假设清单（12 commit×Linux 文档对照+全仓扫描实测）
+│   └── audit_kernel_features.py ← 可跑扫描器：crate 风险指数/docs 覆盖/变更域汇总（零依赖）
 ├── tools/                  ← Verification 子系统：kernel 验证金字塔 L1-L4
 │   ├── k_check.sh          ← L1 风格：checkpatch.pl --strict
 │   ├── k_static.sh         ← L2 静态：sparse(C=2) + coccinelle（缺则报装法）
